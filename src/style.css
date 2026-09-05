@@ -129,13 +129,33 @@ body {
 main#app {
   padding: 6px 28px 28px;
   height: calc(100% - 74px);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+main#app::-webkit-scrollbar {
+  width: 8px;
+}
+main#app::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.14);
+  border-radius: 4px;
+}
+main#app::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .grid {
   display: grid;
   grid-template-columns: 1.15fr 1fr;
   gap: 24px;
-  height: 100%;
+  align-items: start;
+}
+
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  min-width: 0;
 }
 
 @media (max-width: 760px) {
@@ -156,6 +176,23 @@ main#app {
   font-size: 13.5px;
   color: var(--text-secondary);
   margin: 0 0 22px;
+}
+
+.card-title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin: 0 0 22px;
+}
+
+.card-title-row .card-title {
+  margin: 0;
+}
+
+.card-title-hint {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
 }
 
 .section-label {
@@ -222,48 +259,106 @@ main#app {
   margin: 4px 0 22px;
 }
 
-.priority-bars {
+.digest {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px;
 }
 
-.priority-row {
-  display: grid;
-  grid-template-columns: 64px 1fr 30px;
-  align-items: center;
-  gap: 12px;
-}
-
-.priority-row .p-label {
+.digest-section-label {
   font-family: var(--mono);
-  font-size: 12px;
-  color: var(--text-secondary);
+  font-weight: 500;
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin: 0 0 8px;
 }
 
-.priority-row .p-track {
-  display: block;
-  height: 8px;
-  border-radius: 5px;
-  background: rgba(0, 0, 0, 0.06);
-  box-shadow: inset 1px 1px 3px var(--shadow-dark-soft);
-  overflow: hidden;
+.digest-section-label.is-overdue {
+  color: var(--text-primary);
 }
 
-.priority-row .p-fill {
-  display: block;
-  height: 100%;
-  border-radius: 5px;
+.digest-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.digest-row,
+.task-list-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 7px 0;
+  cursor: default;
+}
+
+.digest-row-marker {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  flex-shrink: 0;
+  margin-top: 7px;
+}
+
+.digest-row.is-p1 .digest-row-marker,
+.digest-row.is-p2 .digest-row-marker {
   background: var(--text-primary);
-  opacity: 0.75;
-  transition: width 0.4s ease;
 }
 
-.priority-row .p-count {
+.digest-row-content {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  color: var(--text-primary);
+  line-height: 1.4;
+}
+
+.digest-row.is-p1 .digest-row-content {
+  font-weight: 500;
+}
+
+.digest-row-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.digest-row-project {
+  font-family: var(--sans);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
+}
+
+.digest-row-time {
   font-family: var(--mono);
-  font-size: 12px;
+  font-size: 11px;
   color: var(--text-secondary);
-  text-align: right;
+  white-space: nowrap;
+}
+
+.digest-more {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  padding: 4px 0 0 16px;
+}
+
+.digest-empty-note {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--text-tertiary);
+  padding: 2px 0;
+}
+
+.digest-nodate {
+  font-family: var(--sans);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin: 18px 0 0;
 }
 
 /* ---------------------------------------------------------------------- */
@@ -273,7 +368,6 @@ main#app {
 .card-projects {
   display: flex;
   flex-direction: column;
-  overflow: hidden;
 }
 
 .chart-wrap {
@@ -310,8 +404,9 @@ main#app {
   list-style: none;
   margin: 0;
   padding: 0;
+  max-height: 220px;
   overflow-y: auto;
-  flex: 1;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -330,6 +425,15 @@ main#app {
   align-items: center;
   gap: 10px;
   font-size: 13px;
+  cursor: pointer;
+  border-radius: 8px;
+  padding: 3px 4px;
+  margin: 0 -4px;
+  transition: background 0.12s ease;
+}
+
+.legend-item:hover {
+  background: rgba(0, 0, 0, 0.04);
 }
 
 .legend-swatch {
@@ -342,6 +446,7 @@ main#app {
 
 .legend-name {
   flex: 1;
+  min-width: 0;
   color: var(--text-primary);
   white-space: nowrap;
   overflow: hidden;
@@ -358,15 +463,15 @@ main#app {
 /* Empty / error states */
 /* ---------------------------------------------------------------------- */
 
-.empty-state,
-.error-state {
-  height: 100%;
+.inline-state {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  gap: 8px;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.inline-state .btn-primary {
+  margin-top: 10px;
 }
 
 .empty-title {
@@ -426,6 +531,144 @@ main#app {
   box-shadow: inset 2px 2px 4px var(--shadow-dark-soft), inset -2px -2px 4px var(--shadow-light-soft);
 }
 
+.btn-block {
+  width: 100%;
+  margin-top: 10px;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Gmail actionable-items card */
+/* ---------------------------------------------------------------------- */
+
+.action-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+}
+
+.action-item {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  padding: 14px 16px;
+  border-radius: var(--radius-md);
+  box-shadow: inset 2px 2px 5px var(--shadow-dark-soft), inset -2px -2px 5px var(--shadow-light-soft);
+  cursor: pointer;
+  transition: box-shadow 0.12s ease;
+}
+
+.action-list::-webkit-scrollbar {
+  width: 6px;
+}
+.action-list::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.12);
+  border-radius: 3px;
+}
+
+.action-item:hover {
+  box-shadow: inset 3px 3px 6px var(--shadow-dark-soft), inset -3px -3px 6px var(--shadow-light-soft);
+}
+
+.action-item-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.action-item-from {
+  font-family: var(--sans);
+  font-size: 11.5px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.action-item-priority {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #fff;
+  background: var(--text-primary);
+  padding: 2px 6px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.action-item-subject {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--text-primary);
+  line-height: 1.35;
+}
+
+.action-item-reason {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.action-item-deadline {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-primary);
+}
+
+.card-placeholder {
+  opacity: 0.55;
+}
+
+.card-placeholder .empty-body {
+  margin: 0;
+}
+
+/* ---------------------------------------------------------------------- */
+/* Project tasks modal */
+/* ---------------------------------------------------------------------- */
+
+.modal-panel {
+  width: 420px;
+  max-height: 72vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.modal-header .card-title {
+  margin: 0;
+}
+
+.task-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.task-list-row {
+  border-bottom: 1px solid var(--hairline);
+}
+
+.task-list-row:last-child {
+  border-bottom: none;
+}
+
 /* ---------------------------------------------------------------------- */
 /* Settings overlay */
 /* ---------------------------------------------------------------------- */
@@ -445,12 +688,34 @@ main#app {
   width: 380px;
 }
 
+.settings-panel-wide {
+  width: 460px;
+  max-height: 82vh;
+  overflow-y: auto;
+}
+
+.settings-section {
+  margin-bottom: 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.settings-section:last-of-type {
+  border-bottom: none;
+  margin-bottom: 20px;
+  padding-bottom: 0;
+}
+
 .field-label {
   display: block;
   font-family: var(--mono);
   font-size: 12px;
   color: var(--text-tertiary);
   margin-bottom: 10px;
+}
+
+.field-label-spaced {
+  margin-top: 16px;
 }
 
 .field-input {
@@ -481,6 +746,58 @@ main#app {
 .field-hint a {
   color: var(--text-primary);
   cursor: pointer;
+}
+
+.field-hint-inline {
+  margin: 0;
+}
+
+.settings-inline-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+
+.account-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 6px;
+}
+
+.account-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  box-shadow: inset 2px 2px 5px var(--shadow-dark-soft), inset -2px -2px 5px var(--shadow-light-soft);
+}
+
+.account-row-email {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.account-row-remove {
+  background: none;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  font-size: 16px;
+  line-height: 1;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+
+.account-row-remove:hover {
+  color: var(--text-primary);
 }
 
 .settings-actions {

@@ -3,8 +3,15 @@
 A minimalist, greyscale personal dashboard for macOS, built with Electron.
 
 Currently shows:
-- **Task summary** — open/overdue/due-today/upcoming counts and a breakdown by priority, from Todoist.
-- **Projects** — a donut chart of open tasks per project, in a greyscale palette.
+- **Task summary** — a morning-digest style list of Todoist tasks grouped
+  into Overdue / Today / Tomorrow / Upcoming, with priority and due time.
+- **Projects** — a donut chart of open tasks per project, in a categorical
+  color palette. Click a slice (or a legend row) to see that project's
+  open tasks in a modal.
+- **Needs a reply** — actionable items extracted from the last 3 days of
+  Gmail across every connected mailbox, screened locally by an Ollama
+  model against a strict "is this actually actionable" bar.
+- **Slack** — placeholder for now.
 
 Designed to be airy and neumorphic: soft off-white surfaces, subtle extruded
 shadows, Roboto Mono for titles/labels/numbers, Roboto for body text.
@@ -16,11 +23,58 @@ npm install
 npm start
 ```
 
-On first launch, click the gear icon and paste your Todoist API token
-(Todoist → Settings → Integrations → Developer — the app links there
-directly from the settings panel). The token is stored locally via
-`electron-store` and never leaves your machine except to call the Todoist
-API directly.
+Click the gear icon to open Settings and configure the integrations you
+want (each is independent — the app works fine with only Todoist
+connected, for example).
+
+### Todoist
+
+Paste your API token (Todoist → Settings → Integrations → Developer — the
+app links there directly). Stored locally via `electron-store`; only ever
+sent to the Todoist API.
+
+### Gmail
+
+Gmail access uses Google OAuth. Since this is a personal app (not a
+published/verified one), you create your own OAuth client:
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+   and create a project if you don't have one.
+2. **OAuth consent screen**: set it to **External**, add yourself as a
+   test user. It's fine to leave it in "Testing" status — you don't need
+   to submit for verification for personal use.
+3. Under **APIs & Services → Library**, enable the **Gmail API**.
+4. Under **Credentials → Create Credentials → OAuth client ID**, choose
+   application type **Desktop app**. Create it.
+5. Copy the generated **Client ID** and **Client secret** into
+   Dashboard's Settings → Google (Gmail).
+6. Click **+ Add Gmail account** in Settings. Your browser opens Google's
+   consent screen; sign in and approve. Since the app is unverified,
+   Google shows an "unverified app" warning — click **Advanced → Go to
+   Dashboard (unsafe)** to proceed (this is expected and normal for a
+   personal-use OAuth client you created yourself).
+7. Repeat step 6 for each additional mailbox — every account you connect
+   this way gets included in the digest.
+
+Tokens are stored locally via `electron-store`; only ever sent to
+Google's OAuth/Gmail endpoints.
+
+### Ollama
+
+The actionability screening runs entirely on your machine via
+[Ollama](https://ollama.com):
+
+```bash
+ollama pull qwen2.5:7b   # or whatever model you prefer
+ollama serve             # usually already running as a background service
+```
+
+In Settings → Ollama, set the host (default `http://localhost:11434`) and
+model tag (default `qwen2.5:7b`), then **Test connection** to confirm the
+app can reach it and see your pulled models.
+
+No email content ever leaves your machine — the Gmail fetch and the LLM
+call both happen locally in the Electron main process.
 
 ## Building the macOS app
 
@@ -42,9 +96,9 @@ unpacked `.app`, which is faster while iterating.
 ## App icon
 
 `assets/icon.png` (1024×1024) is a **placeholder** I generated to match the
-app's look — a greyscale donut mark on a soft rounded card — since no icon
-file actually reached this session (only mentioned in text). To swap in
-your real icon:
+app's look — a donut mark on a soft rounded card — since no icon file
+actually reached this session (only mentioned in text). To swap in your
+real icon:
 
 1. Replace `assets/icon.png` with your own 1024×1024 PNG (square, no
    transparency needed — macOS handles corner rounding at render time from
@@ -56,32 +110,46 @@ your real icon:
 colors/proportions instead (`pip install pillow cairosvg && python3
 scripts/gen_icon.py`).
 
-## Previewing without Todoist
+## Previewing without any accounts connected
 
 `node_modules/.bin/electron scripts/preview.js [out.png]` renders the
-dashboard with mock data and saves a screenshot — handy for checking layout
-changes without a real API token.
+dashboard with mock Todoist + Gmail data and saves a screenshot — handy
+for checking layout changes without real tokens, OAuth, or Ollama running.
+Pass `--gmail-state=empty|loading|error|content` to preview a specific
+Gmail card state.
 
 ## Project structure
 
 ```
-main.js        Electron main process — window, Todoist API calls, token storage
-preload.js     contextBridge API exposed to the renderer
+main.js          Electron main process — window creation, IPC wiring
+preload.js       contextBridge API exposed to the renderer
+lib/
+  store.js       Shared electron-store instance (all settings/tokens)
+  todoist.js     Todoist API v1 client + morning-digest bucketing
+  gmail.js       Google OAuth (loopback flow) + Gmail message fetching/parsing
+  gmailDigest.js Orchestrates gmail.js + ollama.js into one digest
+  ollama.js      Local LLM call that screens emails for actionability
 src/
-  index.html   App shell
-  style.css    Neumorphic greyscale design system
-  app.js       Rendering logic (stats, priority bars, donut chart, legend)
+  index.html     App shell
+  style.css      Neumorphic design system
+  app.js         Rendering logic — digest, chart, project modal, Gmail card, settings
 assets/
-  icon.png     App icon (placeholder — see above)
-  icon.svg     Editable source for the icon
+  icon.png       App icon (placeholder — see above)
+  icon.svg       Editable source for the icon
 ```
 
-## Notes / next steps
+## Notes / limitations
 
 - Data refreshes on launch, on the refresh button, and every 5 minutes
   while the app is open.
-- Priority rows are labelled P1 (urgent) → P4 (normal), matching Todoist's
-  own convention.
-- The "Projects" chart currently counts **open tasks per project** — happy
-  to switch it to project count/status or add more widgets (calendar,
-  habits, etc.) as next iterations.
+- Priority markers follow Todoist's own convention (P1 highest → P4
+  normal); only P1/P2 tasks get a bold marker to keep the list calm.
+- The Gmail digest fetches full message bodies (capped ~2000 characters
+  each) for better deadline detection, which is slower than a
+  snippet-only pass — expect the "Needs a reply" card to take a few
+  seconds to tens of seconds depending on inbox volume and your Ollama
+  model's speed.
+- The actionability prompt is intentionally strict (see `lib/ollama.js`
+  for the exact criteria) — tune it there if it's too strict/loose for
+  your inbox.
+- Slack is a placeholder card — next integration.

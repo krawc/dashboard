@@ -33,73 +33,163 @@
   </header>
 
   <main id="app">
+    <div class="grid">
 
-    <section id="empty-state" class="panel empty-state" hidden>
-      <p class="empty-title">Connect Todoist</p>
-      <p class="empty-body">Add your Todoist API token to see your task summary and project breakdown.</p>
-      <button id="empty-connect-btn" class="btn-primary">Add API token</button>
-    </section>
+      <div class="col col-left">
+        <article class="card card-summary">
+          <h2 class="card-title">Task summary</h2>
 
-    <section id="error-state" class="panel error-state" hidden>
-      <p class="empty-title">Couldn't load Todoist</p>
-      <p id="error-message" class="empty-body"></p>
-      <button id="error-retry-btn" class="btn-primary">Try again</button>
-    </section>
-
-    <section id="dashboard-grid" class="grid" hidden>
-
-      <article class="card card-summary">
-        <h2 class="card-title">Task Summary</h2>
-        <div class="stat-grid">
-          <div class="stat">
-            <span class="stat-value" id="stat-total">–</span>
-            <span class="stat-label">open tasks</span>
+          <div id="todoist-empty" class="inline-state" hidden>
+            <p class="empty-title">Connect Todoist</p>
+            <p class="empty-body">Add your Todoist API token to see today's tasks and your project breakdown.</p>
+            <button id="empty-connect-btn" class="btn-primary">Add API token</button>
           </div>
-          <div class="stat stat-flag" data-flag="overdue">
-            <span class="stat-value" id="stat-overdue">–</span>
-            <span class="stat-label">overdue</span>
+
+          <div id="todoist-error" class="inline-state" hidden>
+            <p class="empty-title">Couldn't load Todoist</p>
+            <p id="todoist-error-message" class="empty-body"></p>
+            <button id="todoist-retry-btn" class="btn-primary">Try again</button>
           </div>
-          <div class="stat">
-            <span class="stat-value" id="stat-today">–</span>
-            <span class="stat-label">due today</span>
+
+          <div id="todoist-content" hidden>
+            <div class="stat-grid">
+              <div class="stat">
+                <span class="stat-value" id="stat-total">–</span>
+                <span class="stat-label">open tasks</span>
+              </div>
+              <div class="stat stat-flag" data-flag="overdue">
+                <span class="stat-value" id="stat-overdue">–</span>
+                <span class="stat-label">overdue</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="stat-today">–</span>
+                <span class="stat-label">due today</span>
+              </div>
+              <div class="stat">
+                <span class="stat-value" id="stat-tomorrow">–</span>
+                <span class="stat-label">tomorrow</span>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div id="digest-sections" class="digest"></div>
+            <p id="digest-nodate" class="digest-nodate"></p>
           </div>
-          <div class="stat">
-            <span class="stat-value" id="stat-upcoming">–</span>
-            <span class="stat-label">upcoming</span>
+        </article>
+      </div>
+
+      <div class="col col-right">
+        <article class="card card-projects">
+          <h2 class="card-title">Projects</h2>
+
+          <div id="projects-empty" class="inline-state" hidden>
+            <p class="empty-body">Connect Todoist to see your project breakdown.</p>
           </div>
-        </div>
 
-        <div class="divider"></div>
-
-        <h3 class="section-label">By priority</h3>
-        <div id="priority-bars" class="priority-bars"></div>
-      </article>
-
-      <article class="card card-projects">
-        <h2 class="card-title">Projects</h2>
-        <div class="chart-wrap">
-          <canvas id="projects-chart" width="220" height="220"></canvas>
-          <div class="chart-center">
-            <span id="chart-center-count" class="chart-center-count">–</span>
-            <span class="chart-center-label">projects</span>
+          <div id="projects-content" hidden>
+            <div class="chart-wrap">
+              <canvas id="projects-chart" width="220" height="220"></canvas>
+              <div class="chart-center">
+                <span id="chart-center-count" class="chart-center-count">–</span>
+                <span class="chart-center-label">projects</span>
+              </div>
+            </div>
+            <ul id="project-legend" class="legend"></ul>
           </div>
-        </div>
-        <ul id="project-legend" class="legend"></ul>
-      </article>
+        </article>
 
-    </section>
+        <article class="card card-gmail">
+          <div class="card-title-row">
+            <h2 class="card-title">Needs a reply</h2>
+            <span id="gmail-scanned" class="card-title-hint"></span>
+          </div>
 
+          <div id="gmail-empty" class="inline-state" hidden>
+            <p class="empty-title">Connect Gmail</p>
+            <p class="empty-body">Connect a mailbox to surface emails that actually need action — screened locally by Ollama.</p>
+            <button id="gmail-connect-btn" class="btn-primary">Connect Gmail</button>
+          </div>
+
+          <div id="gmail-loading" class="inline-state" hidden>
+            <p class="empty-body">Scanning the last 3 days of mail…</p>
+          </div>
+
+          <div id="gmail-error" class="inline-state" hidden>
+            <p class="empty-title">Couldn't build digest</p>
+            <p id="gmail-error-message" class="empty-body"></p>
+            <button id="gmail-retry-btn" class="btn-primary">Try again</button>
+          </div>
+
+          <div id="gmail-content" hidden>
+            <ul id="gmail-list" class="action-list"></ul>
+            <p id="gmail-clear" class="empty-body" hidden>Nothing needs your attention right now.</p>
+          </div>
+        </article>
+
+        <article class="card card-slack card-placeholder">
+          <h2 class="card-title">Slack</h2>
+          <p class="empty-body">Coming soon.</p>
+        </article>
+      </div>
+
+    </div>
   </main>
 
+  <!-- Project tasks modal (opened from a pie chart slice or legend row) -->
+  <div id="project-modal-overlay" class="overlay" hidden>
+    <div class="settings-panel panel modal-panel">
+      <div class="modal-header">
+        <h2 class="card-title" id="project-modal-title">Project</h2>
+        <button id="project-modal-close" class="icon-btn" aria-label="Close">
+          <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4l-6.3 6.3-1.41-1.41L9.17 12l-6.3-6.3 1.42-1.41L10.59 10.6l6.3-6.3z"/></svg>
+        </button>
+      </div>
+      <ul id="project-modal-list" class="task-list"></ul>
+    </div>
+  </div>
+
   <div id="settings-overlay" class="overlay" hidden>
-    <div class="settings-panel panel">
+    <div class="settings-panel panel settings-panel-wide">
       <h2 class="card-title">Settings</h2>
-      <label class="field-label" for="token-input">Todoist API token</label>
-      <input id="token-input" class="field-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your token" />
-      <p class="field-hint">
-        Find yours in Todoist under
-        <a id="todoist-settings-link" href="#">Settings → Integrations → Developer</a>.
-      </p>
+
+      <div class="settings-section">
+        <h3 class="section-label">Todoist</h3>
+        <label class="field-label" for="token-input">API token</label>
+        <input id="token-input" class="field-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your token" />
+        <p class="field-hint">
+          Find yours in Todoist under
+          <a id="todoist-settings-link" href="#">Settings → Integrations → Developer</a>.
+        </p>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="section-label">Google (Gmail)</h3>
+        <label class="field-label" for="google-client-id-input">OAuth client ID</label>
+        <input id="google-client-id-input" class="field-input" type="text" autocomplete="off" spellcheck="false" placeholder="…apps.googleusercontent.com" />
+        <label class="field-label field-label-spaced" for="google-client-secret-input">OAuth client secret</label>
+        <input id="google-client-secret-input" class="field-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your client secret" />
+        <p class="field-hint">
+          Create a Desktop-app OAuth client in
+          <a id="google-console-link" href="#">Google Cloud Console</a> — see the README for exact steps.
+        </p>
+
+        <div class="account-list" id="gmail-account-list"></div>
+        <button id="gmail-add-account-btn" class="btn-ghost btn-block">+ Add Gmail account</button>
+      </div>
+
+      <div class="settings-section">
+        <h3 class="section-label">Ollama</h3>
+        <label class="field-label" for="ollama-host-input">Host</label>
+        <input id="ollama-host-input" class="field-input" type="text" autocomplete="off" spellcheck="false" placeholder="http://localhost:11434" />
+        <label class="field-label field-label-spaced" for="ollama-model-input">Model</label>
+        <input id="ollama-model-input" class="field-input" type="text" autocomplete="off" spellcheck="false" placeholder="qwen2.5:7b" />
+        <div class="settings-inline-row">
+          <button id="ollama-test-btn" class="btn-ghost">Test connection</button>
+          <span id="ollama-test-result" class="field-hint field-hint-inline"></span>
+        </div>
+      </div>
+
       <div class="settings-actions">
         <button id="settings-cancel-btn" class="btn-ghost">Cancel</button>
         <button id="settings-save-btn" class="btn-primary">Save</button>
