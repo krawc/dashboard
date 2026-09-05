@@ -54,6 +54,7 @@ const els = {
   googleConsoleLink: document.getElementById('google-console-link'),
   gmailAccountList: document.getElementById('gmail-account-list'),
   gmailAddAccountBtn: document.getElementById('gmail-add-account-btn'),
+  gmailCharCapInput: document.getElementById('gmail-char-cap-input'),
   ollamaHostInput: document.getElementById('ollama-host-input'),
   ollamaModelInput: document.getElementById('ollama-model-input'),
   ollamaTestBtn: document.getElementById('ollama-test-btn'),
@@ -465,10 +466,11 @@ els.ollamaTestBtn.addEventListener('click', async () => {
 });
 
 async function openSettings() {
-  const [token, googleCreds, ollamaConfig] = await Promise.all([
+  const [token, googleCreds, ollamaConfig, charCap] = await Promise.all([
     window.dashboard.getToken(),
     window.dashboard.getGoogleCredentials(),
-    window.dashboard.getOllamaConfig()
+    window.dashboard.getOllamaConfig(),
+    window.dashboard.getGmailBodyCharCap()
   ]);
 
   els.tokenInput.value = token || '';
@@ -476,6 +478,7 @@ async function openSettings() {
   els.googleClientSecretInput.value = googleCreds.clientSecret || '';
   els.ollamaHostInput.value = ollamaConfig.host || '';
   els.ollamaModelInput.value = ollamaConfig.model || '';
+  els.gmailCharCapInput.value = charCap;
   els.ollamaTestResult.textContent = '';
 
   await refreshAccountList();
@@ -492,7 +495,8 @@ async function saveSettings() {
   await Promise.all([
     window.dashboard.setToken(els.tokenInput.value.trim()),
     window.dashboard.setGoogleCredentials(els.googleClientIdInput.value.trim(), els.googleClientSecretInput.value.trim()),
-    window.dashboard.setOllamaConfig(els.ollamaHostInput.value.trim(), els.ollamaModelInput.value.trim())
+    window.dashboard.setOllamaConfig(els.ollamaHostInput.value.trim(), els.ollamaModelInput.value.trim()),
+    window.dashboard.setGmailBodyCharCap(els.gmailCharCapInput.value.trim())
   ]);
   closeSettings();
   await loadAll();

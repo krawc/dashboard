@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('dashboard', {
   getGoogleCredentials: () => ipcRenderer.invoke('settings:getGoogleCredentials'),
   setGoogleCredentials: (clientId, clientSecret) =>
     ipcRenderer.invoke('settings:setGoogleCredentials', { clientId, clientSecret }),
+  getGmailBodyCharCap: () => ipcRenderer.invoke('settings:getGmailBodyCharCap'),
+  setGmailBodyCharCap: (chars) => ipcRenderer.invoke('settings:setGmailBodyCharCap', chars),
   getOllamaConfig: () => ipcRenderer.invoke('settings:getOllamaConfig'),
   setOllamaConfig: (host, model) => ipcRenderer.invoke('settings:setOllamaConfig', { host, model }),
   openExternal: (url) => ipcRenderer.invoke('shell:openExternal', url),

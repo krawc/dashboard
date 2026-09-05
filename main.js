@@ -60,6 +60,13 @@ ipcMain.handle('settings:setGoogleCredentials', (_event, { clientId, clientSecre
   return true;
 });
 
+ipcMain.handle('settings:getGmailBodyCharCap', () => gmail.getBodyCharCap());
+
+ipcMain.handle('settings:setGmailBodyCharCap', (_event, chars) => {
+  gmail.setBodyCharCap(chars);
+  return true;
+});
+
 ipcMain.handle('settings:getOllamaConfig', () => ollama.getConfig());
 
 ipcMain.handle('settings:setOllamaConfig', (_event, { host, model }) => {

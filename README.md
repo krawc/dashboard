@@ -80,6 +80,15 @@ so it re-consents with the corrected scope.
 Tokens are stored locally via `electron-store`; only ever sent to
 Google's OAuth/Gmail endpoints.
 
+**Email excerpt length** (Settings → Google (Gmail), default **200**
+characters): how much of each email body gets sent to Ollama. This is the
+single biggest lever on how long a sync takes — small/CPU-bound models can
+take a very long time per email once the excerpt gets long, so a low
+value keeps things snappy at the cost of possibly missing a deadline
+buried deep in a long email. Changing this clears the cached message
+bodies so the new length applies on the very next refresh instead of
+waiting for the normal 3-day cache turnover.
+
 ### Ollama
 
 The actionability screening runs entirely on your machine via
@@ -181,12 +190,13 @@ assets/
   while the app is open.
 - Priority markers follow Todoist's own convention (P1 highest → P4
   normal); only P1/P2 tasks get a bold marker to keep the list calm.
-- The Gmail digest fetches full message bodies (capped ~2000 characters
-  each) for better deadline detection, which is slower than a
-  snippet-only pass — expect the "Needs a reply" card to take a few
-  seconds to tens of seconds depending on inbox volume and your Ollama
-  model's speed. Only the *first* sync of a mailbox is slow like this:
-  fetched messages are cached locally (they never change once sent), so
+- The Gmail digest fetches full message bodies (length capped by the
+  "Email excerpt length" setting, default 200 characters — see Gmail
+  setup above) for better deadline detection than a snippet alone, at
+  the cost of Ollama having more to read per email — tune that setting
+  if syncs feel slow. Only the *first* sync of a mailbox is slow like
+  this: fetched messages are cached locally (they never change once
+  sent), so
   later refreshes only fetch genuinely new mail. Overlapping refreshes
   (e.g. clicking refresh while the 5-minute auto-refresh is mid-flight)
   also collapse into a single fetch rather than multiplying — both exist

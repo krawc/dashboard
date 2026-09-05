@@ -193,6 +193,14 @@
 
         <div class="account-list" id="gmail-account-list"></div>
         <button id="gmail-add-account-btn" class="btn-ghost btn-block">+ Add Gmail account</button>
+
+        <label class="field-label field-label-spaced" for="gmail-char-cap-input">Email excerpt length (characters)</label>
+        <input id="gmail-char-cap-input" class="field-input" type="number" min="50" max="5000" step="50" placeholder="200" />
+        <p class="field-hint">
+          How much of each email body gets sent to the local model. Lower is
+          much faster on small/CPU-bound models but may miss a deadline
+          buried further down in a long email.
+        </p>
       </div>
 
       <div class="settings-section">
