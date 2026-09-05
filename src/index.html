@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta http-equiv="Content-Security-Policy" content="default-src 'self' file:; style-src 'self' 'unsafe-inline' file:; font-src 'self' file: data:; img-src 'self' data:; script-src 'self' file:;" />
+<title>Dashboard</title>
+<link rel="stylesheet" href="../node_modules/@fontsource/roboto/400.css" />
+<link rel="stylesheet" href="../node_modules/@fontsource/roboto/500.css" />
+<link rel="stylesheet" href="../node_modules/@fontsource/roboto/700.css" />
+<link rel="stylesheet" href="../node_modules/@fontsource/roboto-mono/400.css" />
+<link rel="stylesheet" href="../node_modules/@fontsource/roboto-mono/500.css" />
+<link rel="stylesheet" href="../node_modules/@fontsource/roboto-mono/700.css" />
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <div class="titlebar-spacer"></div>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark"></span>
+      <h1>DASHBOARD</h1>
+    </div>
+    <div class="topbar-actions">
+      <span id="synced-at" class="synced-at"></span>
+      <button id="refresh-btn" class="icon-btn" title="Refresh" aria-label="Refresh">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M17.65 6.35A7.95 7.95 0 0 0 12 4a8 8 0 1 0 7.75 10h-2.09A6 6 0 1 1 12 6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+      </button>
+      <button id="settings-btn" class="icon-btn" title="Settings" aria-label="Settings">
+        <svg viewBox="0 0 24 24" width="16" height="16"><path fill="currentColor" d="M19.14 12.94a7.14 7.14 0 0 0 .06-.94 7.14 7.14 0 0 0-.06-.94l2.03-1.58a.5.5 0 0 0 .12-.64l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.3 7.3 0 0 0-1.62-.94l-.36-2.54a.5.5 0 0 0-.5-.42h-3.84a.5.5 0 0 0-.5.42l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96a.5.5 0 0 0-.6.22L2.71 8.84a.5.5 0 0 0 .12.64l2.03 1.58c-.04.31-.06.62-.06.94s.02.63.06.94l-2.03 1.58a.5.5 0 0 0-.12.64l1.92 3.32c.14.24.42.32.6.22l2.39-.96c.49.38 1.03.7 1.62.94l.36 2.54a.5.5 0 0 0 .5.42h3.84a.5.5 0 0 0 .5-.42l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.24.1.5 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.64l-2.03-1.58zM12 15.5a3.5 3.5 0 1 1 0-7 3.5 3.5 0 0 1 0 7z"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main id="app">
+
+    <section id="empty-state" class="panel empty-state" hidden>
+      <p class="empty-title">Connect Todoist</p>
+      <p class="empty-body">Add your Todoist API token to see your task summary and project breakdown.</p>
+      <button id="empty-connect-btn" class="btn-primary">Add API token</button>
+    </section>
+
+    <section id="error-state" class="panel error-state" hidden>
+      <p class="empty-title">Couldn't load Todoist</p>
+      <p id="error-message" class="empty-body"></p>
+      <button id="error-retry-btn" class="btn-primary">Try again</button>
+    </section>
+
+    <section id="dashboard-grid" class="grid" hidden>
+
+      <article class="card card-summary">
+        <h2 class="card-title">Task Summary</h2>
+        <div class="stat-grid">
+          <div class="stat">
+            <span class="stat-value" id="stat-total">–</span>
+            <span class="stat-label">open tasks</span>
+          </div>
+          <div class="stat stat-flag" data-flag="overdue">
+            <span class="stat-value" id="stat-overdue">–</span>
+            <span class="stat-label">overdue</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="stat-today">–</span>
+            <span class="stat-label">due today</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="stat-upcoming">–</span>
+            <span class="stat-label">upcoming</span>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <h3 class="section-label">By priority</h3>
+        <div id="priority-bars" class="priority-bars"></div>
+      </article>
+
+      <article class="card card-projects">
+        <h2 class="card-title">Projects</h2>
+        <div class="chart-wrap">
+          <canvas id="projects-chart" width="220" height="220"></canvas>
+          <div class="chart-center">
+            <span id="chart-center-count" class="chart-center-count">–</span>
+            <span class="chart-center-label">projects</span>
+          </div>
+        </div>
+        <ul id="project-legend" class="legend"></ul>
+      </article>
+
+    </section>
+
+  </main>
+
+  <div id="settings-overlay" class="overlay" hidden>
+    <div class="settings-panel panel">
+      <h2 class="card-title">Settings</h2>
+      <label class="field-label" for="token-input">Todoist API token</label>
+      <input id="token-input" class="field-input" type="password" autocomplete="off" spellcheck="false" placeholder="Paste your token" />
+      <p class="field-hint">
+        Find yours in Todoist under
+        <a id="todoist-settings-link" href="#">Settings → Integrations → Developer</a>.
+      </p>
+      <div class="settings-actions">
+        <button id="settings-cancel-btn" class="btn-ghost">Cancel</button>
+        <button id="settings-save-btn" class="btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+{
+  "name": "personal-dashboard",
+  "productName": "Dashboard",
+  "version": "0.1.0",
+  "description": "A minimalist personal dashboard — Todoist summary and project overview.",
+  "main": "main.js",
+  "author": "Konrad Krawczyk",
+  "license": "UNLICENSED",
+  "private": true,
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --mac",
+    "dist:dir": "electron-builder --mac --dir"
+  },
+  "dependencies": {
+    "@fontsource/roboto": "^5.1.0",
+    "@fontsource/roboto-mono": "^5.1.0",
+    "chart.js": "^4.4.4",
+    "electron-store": "^8.2.0"
+  },
+  "devDependencies": {
+    "electron": "^32.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.krawczyk.dashboard",
+    "productName": "Dashboard",
+    "files": [
+      "main.js",
+      "preload.js",
+      "src/**/*",
+      "node_modules/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "assets/icon.png",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["arm64", "x64"]
+        }
+      ]
+    }
+  }
+}
