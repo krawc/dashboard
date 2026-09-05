@@ -622,12 +622,100 @@ main#app::-webkit-scrollbar-track {
   color: var(--text-primary);
 }
 
-.card-placeholder {
-  opacity: 0.55;
+/* ---------------------------------------------------------------------- */
+/* German drill */
+/* ---------------------------------------------------------------------- */
+
+.drill-progress {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
 }
 
-.card-placeholder .empty-body {
-  margin: 0;
+.drill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.12);
+}
+
+.drill-dot.is-correct {
+  background: var(--text-primary);
+}
+
+.drill-dot.is-wrong {
+  background: var(--text-primary);
+  opacity: 0.3;
+}
+
+.drill-dot.is-current {
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.14);
+}
+
+.drill-category {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-tertiary);
+  margin: 0 0 10px;
+}
+
+.drill-prompt {
+  font-family: var(--sans);
+  font-size: 15.5px;
+  color: var(--text-primary);
+  line-height: 1.5;
+  margin: 0 0 18px;
+}
+
+.drill-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.drill-option {
+  font-family: var(--sans);
+  font-size: 13.5px;
+  color: var(--text-primary);
+  text-align: left;
+  padding: 12px 16px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  cursor: pointer;
+  box-shadow: 3px 3px 6px var(--shadow-dark-soft), -3px -3px 6px var(--shadow-light-soft);
+  transition: box-shadow 0.12s ease, opacity 0.12s ease;
+}
+
+.drill-option:hover:not(:disabled) {
+  box-shadow: inset 2px 2px 4px var(--shadow-dark-soft), inset -2px -2px 4px var(--shadow-light-soft);
+}
+
+.drill-option:disabled {
+  cursor: default;
+}
+
+.drill-option.is-correct {
+  box-shadow: inset 2px 2px 5px var(--shadow-dark-soft), inset -2px -2px 5px var(--shadow-light-soft);
+  font-weight: 600;
+}
+
+.drill-option.is-incorrect {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
+.drill-feedback {
+  font-family: var(--sans);
+  font-size: 12.5px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
+
+.drill-feedback.is-correct-msg {
+  color: var(--text-primary);
 }
 
 /* ---------------------------------------------------------------------- */

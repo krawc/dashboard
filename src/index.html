@@ -127,9 +127,26 @@
           </div>
         </article>
 
-        <article class="card card-slack card-placeholder">
-          <h2 class="card-title">Slack</h2>
-          <p class="empty-body">Coming soon.</p>
+        <article class="card card-german">
+          <div class="card-title-row">
+            <h2 class="card-title">Deutsch</h2>
+            <span id="german-streak" class="card-title-hint"></span>
+          </div>
+
+          <div id="german-done" class="inline-state" hidden>
+            <p class="empty-title">Done for today</p>
+            <p class="empty-body" id="german-done-summary"></p>
+            <button id="german-more-btn" class="btn-ghost btn-block">Practice more</button>
+          </div>
+
+          <div id="german-active" hidden>
+            <div class="drill-progress" id="german-progress"></div>
+            <p class="drill-category" id="german-category"></p>
+            <p class="drill-prompt" id="german-prompt"></p>
+            <div class="drill-options" id="german-options"></div>
+            <p class="drill-feedback" id="german-feedback" hidden></p>
+            <button id="german-next-btn" class="btn-primary btn-block" hidden>Weiter</button>
+          </div>
         </article>
       </div>
 
@@ -198,6 +215,7 @@
   </div>
 
   <script src="../node_modules/chart.js/dist/chart.umd.js"></script>
+  <script src="german-data.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

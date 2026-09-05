@@ -11,7 +11,9 @@ Currently shows:
 - **Needs a reply** — actionable items extracted from the last 3 days of
   Gmail across every connected mailbox, screened locally by an Ollama
   model against a strict "is this actually actionable" bar.
-- **Slack** — placeholder for now.
+- **Deutsch** — a daily B2 German drill: five questions a day covering
+  der/die/das, fixed-case prepositions, Wechselpräpositionen (Akkusativ
+  vs. Dativ), and verbs with fixed prepositions, with a day-streak.
 
 Designed to be airy and neumorphic: soft off-white surfaces, subtle extruded
 shadows, Roboto Mono for titles/labels/numbers, Roboto for body text.
@@ -76,6 +78,20 @@ app can reach it and see your pulled models.
 No email content ever leaves your machine — the Gmail fetch and the LLM
 call both happen locally in the Electron main process.
 
+### Deutsch (German drill)
+
+Nothing to configure — the question bank lives in `src/german-data.js`
+and the daily streak is tracked locally via `electron-store`. Each day's
+round is five questions: one from each focus area (der/die/das, fixed-case
+prepositions, Wechselpräpositionen, verbs with prepositions), plus one
+more from a random area. Finishing the round marks the day done and bumps
+the streak; "Practice more" runs additional rounds that don't affect the
+streak. Missing a day resets the streak to 1 on your next completion.
+
+Want to add more questions or tweak the sets? Just edit the arrays in
+`src/german-data.js` — each entry is plain data (`{ noun, answer, hint }`,
+etc.), no build step needed.
+
 ## Building the macOS app
 
 Run this on a Mac (icon conversion and code signing need macOS tooling):
@@ -116,7 +132,7 @@ scripts/gen_icon.py`).
 dashboard with mock Todoist + Gmail data and saves a screenshot — handy
 for checking layout changes without real tokens, OAuth, or Ollama running.
 Pass `--gmail-state=empty|loading|error|content` to preview a specific
-Gmail card state.
+Gmail card state, or `--german-done` to preview the "done for today" state.
 
 ## Project structure
 
@@ -129,10 +145,12 @@ lib/
   gmail.js       Google OAuth (loopback flow) + Gmail message fetching/parsing
   gmailDigest.js Orchestrates gmail.js + ollama.js into one digest
   ollama.js      Local LLM call that screens emails for actionability
+  germanDrill.js Daily-streak tracking for the German drill
 src/
   index.html     App shell
   style.css      Neumorphic design system
-  app.js         Rendering logic — digest, chart, project modal, Gmail card, settings
+  app.js         Rendering logic — digest, chart, project modal, Gmail card, German drill, settings
+  german-data.js German drill question bank (plain data, edit freely)
 assets/
   icon.png       App icon (placeholder — see above)
   icon.svg       Editable source for the icon
@@ -152,4 +170,6 @@ assets/
 - The actionability prompt is intentionally strict (see `lib/ollama.js`
   for the exact criteria) — tune it there if it's too strict/loose for
   your inbox.
-- Slack is a placeholder card — next integration.
+- The German drill keeps its own in-page session state, so it's
+  deliberately excluded from the refresh button and the 5-minute
+  auto-refresh — neither will reset a round you're in the middle of.

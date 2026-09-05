@@ -5,6 +5,7 @@ const todoist = require('./lib/todoist');
 const gmail = require('./lib/gmail');
 const gmailDigest = require('./lib/gmailDigest');
 const ollama = require('./lib/ollama');
+const germanDrill = require('./lib/germanDrill');
 
 let mainWindow;
 
@@ -98,3 +99,11 @@ ipcMain.handle('gmail:getDigest', () => gmailDigest.getDigest());
 ipcMain.handle('ollama:testConnection', (_event, host) =>
   ollama.testConnection(host || ollama.getConfig().host)
 );
+
+// ---------------------------------------------------------------------------
+// German drill
+// ---------------------------------------------------------------------------
+
+ipcMain.handle('german:getState', () => germanDrill.getState());
+
+ipcMain.handle('german:completeRound', () => germanDrill.recordCompletion());

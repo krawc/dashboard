@@ -21,5 +21,9 @@ contextBridge.exposeInMainWorld('dashboard', {
   getGmailDigest: () => ipcRenderer.invoke('gmail:getDigest'),
 
   // Ollama
-  testOllamaConnection: (host) => ipcRenderer.invoke('ollama:testConnection', host)
+  testOllamaConnection: (host) => ipcRenderer.invoke('ollama:testConnection', host),
+
+  // German drill
+  getGermanState: () => ipcRenderer.invoke('german:getState'),
+  completeGermanRound: () => ipcRenderer.invoke('german:completeRound')
 });

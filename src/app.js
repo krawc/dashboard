@@ -485,6 +485,181 @@ els.todoistRetryBtn.addEventListener('click', loadOverview);
 els.gmailRetryBtn.addEventListener('click', loadGmailDigest);
 
 // ---------------------------------------------------------------------------
+// German drill
+// ---------------------------------------------------------------------------
+
+const GERMAN_CATEGORY_META = {
+  gender: { label: 'Artikel · der/die/das', options: ['der', 'die', 'das'] },
+  caseFixed: { label: 'Präposition + Fall', options: ['Akkusativ', 'Dativ', 'Genitiv'] },
+  wechsel: { label: 'Wechselpräposition · Wo? / Wohin?', options: ['Akkusativ', 'Dativ'] },
+  verbPrep: { label: 'Verb + Präposition', options: null }
+};
+
+const germanEls = {
+  streak: document.getElementById('german-streak'),
+  done: document.getElementById('german-done'),
+  doneSummary: document.getElementById('german-done-summary'),
+  moreBtn: document.getElementById('german-more-btn'),
+  active: document.getElementById('german-active'),
+  progress: document.getElementById('german-progress'),
+  category: document.getElementById('german-category'),
+  prompt: document.getElementById('german-prompt'),
+  options: document.getElementById('german-options'),
+  feedback: document.getElementById('german-feedback'),
+  nextBtn: document.getElementById('german-next-btn')
+};
+
+let germanRound = [];
+let germanRoundIndex = 0;
+let germanRoundResults = [];
+// True only for the day's first round — a "practice more" bonus round
+// shouldn't bump the streak a second time.
+let germanCountsTowardStreak = false;
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+function shuffle(arr) {
+  const copy = [...arr];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+// Five questions: one from each of the four focus areas, plus one more
+// from a random area, so a round always touches everything you're working on.
+function buildGermanRound() {
+  const categories = shuffle(Object.keys(GERMAN_CATEGORY_META));
+  const order = [...categories, pickRandom(categories)];
+  return order.map((category) => ({ category, item: pickRandom(window.GermanDrills[category]) }));
+}
+
+function germanPrompt(category, item) {
+  if (category === 'gender') return item.noun;
+  if (category === 'caseFixed') return `„${item.prep}“`;
+  return item.sentence;
+}
+
+function germanOptions(category, item) {
+  return GERMAN_CATEGORY_META[category].options || item.options;
+}
+
+function renderGermanProgress() {
+  germanEls.progress.innerHTML = germanRound
+    .map((_, i) => {
+      let cls = 'drill-dot';
+      if (i === germanRoundIndex) cls += ' is-current';
+      if (germanRoundResults[i] === true) cls += ' is-correct';
+      if (germanRoundResults[i] === false) cls += ' is-wrong';
+      return `<span class="${cls}"></span>`;
+    })
+    .join('');
+}
+
+function renderGermanQuestion() {
+  const { category, item } = germanRound[germanRoundIndex];
+  germanEls.category.textContent = GERMAN_CATEGORY_META[category].label;
+  germanEls.prompt.textContent = germanPrompt(category, item);
+  germanEls.feedback.hidden = true;
+  germanEls.nextBtn.hidden = true;
+
+  germanEls.options.innerHTML = germanOptions(category, item)
+    .map((opt) => `<button class="drill-option" data-value="${escapeHtml(opt)}">${escapeHtml(opt)}</button>`)
+    .join('');
+
+  renderGermanProgress();
+}
+
+function handleGermanAnswer(selected) {
+  const { item } = germanRound[germanRoundIndex];
+  const correct = selected === item.answer;
+  germanRoundResults[germanRoundIndex] = correct;
+
+  [...germanEls.options.children].forEach((btn) => {
+    btn.disabled = true;
+    if (btn.dataset.value === item.answer) btn.classList.add('is-correct');
+    else if (btn.dataset.value === selected) btn.classList.add('is-incorrect');
+  });
+
+  germanEls.feedback.hidden = false;
+  germanEls.feedback.className = correct ? 'drill-feedback is-correct-msg' : 'drill-feedback';
+  germanEls.feedback.textContent = item.hint || (correct ? 'Richtig!' : `Richtig wäre: ${item.answer}`);
+
+  germanEls.nextBtn.hidden = false;
+  germanEls.nextBtn.textContent = germanRoundIndex < germanRound.length - 1 ? 'Weiter' : 'Fertig';
+
+  renderGermanProgress();
+}
+
+function showGermanDone(state, correctCount) {
+  germanEls.active.hidden = true;
+  germanEls.done.hidden = false;
+
+  if (state) germanEls.streak.textContent = state.streak > 0 ? `${state.streak} day streak` : '';
+
+  germanEls.doneSummary.textContent = germanCountsTowardStreak
+    ? `${correctCount}/5 today. See you tomorrow.`
+    : `${correctCount}/5 this round.`;
+}
+
+async function finishGermanRound() {
+  const correctCount = germanRoundResults.filter(Boolean).length;
+
+  if (germanCountsTowardStreak) {
+    const state = await window.dashboard.completeGermanRound();
+    showGermanDone(state, correctCount);
+  } else {
+    showGermanDone(null, correctCount);
+  }
+}
+
+function startGermanRound() {
+  germanRound = buildGermanRound();
+  germanRoundIndex = 0;
+  germanRoundResults = [];
+  germanEls.done.hidden = true;
+  germanEls.active.hidden = false;
+  renderGermanQuestion();
+}
+
+germanEls.options.addEventListener('click', (e) => {
+  const btn = e.target.closest('.drill-option');
+  if (!btn || btn.disabled) return;
+  handleGermanAnswer(btn.dataset.value);
+});
+
+germanEls.nextBtn.addEventListener('click', () => {
+  if (germanRoundIndex < germanRound.length - 1) {
+    germanRoundIndex += 1;
+    renderGermanQuestion();
+  } else {
+    finishGermanRound();
+  }
+});
+
+germanEls.moreBtn.addEventListener('click', () => {
+  germanCountsTowardStreak = false;
+  startGermanRound();
+});
+
+async function loadGermanDrill() {
+  const state = await window.dashboard.getGermanState();
+  germanEls.streak.textContent = state.streak > 0 ? `${state.streak} day streak` : '';
+
+  if (state.doneToday) {
+    germanEls.active.hidden = true;
+    germanEls.done.hidden = false;
+    germanEls.doneSummary.textContent = 'Come back tomorrow for a new round.';
+  } else {
+    germanCountsTowardStreak = true;
+    startGermanRound();
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Boot
 // ---------------------------------------------------------------------------
 
@@ -495,6 +670,11 @@ function loadAll() {
 els.refreshBtn.addEventListener('click', loadAll);
 
 loadAll();
+// The German drill keeps its own in-page session state (current round,
+// answers so far) — it's intentionally excluded from loadAll()/refresh so
+// a manual refresh or the 5-minute auto-refresh never resets a round the
+// user is in the middle of.
+loadGermanDrill();
 
 // Refresh automatically every 5 minutes while the app is open.
 setInterval(loadAll, 5 * 60 * 1000);

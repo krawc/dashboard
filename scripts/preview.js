@@ -128,6 +128,10 @@ ipcMain.handle('gmail:getDigest', () => {
 
 ipcMain.handle('ollama:testConnection', () => ({ ok: true, models: ['qwen2.5:7b', 'llama3.1:8b'] }));
 
+const germanDoneToday = process.argv.includes('--german-done');
+ipcMain.handle('german:getState', () => ({ streak: 4, lastCompletedDate: '2026-09-04', doneToday: germanDoneToday }));
+ipcMain.handle('german:completeRound', () => ({ streak: 5, lastCompletedDate: '2026-09-05', doneToday: true }));
+
 app.whenReady().then(async () => {
   const win = new BrowserWindow({
     width: 1040,
