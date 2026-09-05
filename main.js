@@ -9,7 +9,10 @@ const store = new Store({
   encryptionKey: 'dashboard-local-only'
 });
 
-const TODOIST_API = 'https://api.todoist.com/rest/v2';
+// Todoist retired the REST v2 / Sync v9 APIs in favor of a single unified
+// API v1, which paginates list endpoints as { results, next_cursor }.
+const TODOIST_API = 'https://api.todoist.com/api/v1';
+const MAX_PAGES = 50; // safety cap — well beyond what a personal account needs
 
 let mainWindow;
 
@@ -67,8 +70,13 @@ ipcMain.handle('shell:openExternal', (_event, url) => {
 // Todoist data
 // ---------------------------------------------------------------------------
 
-async function todoistFetch(pathname, token) {
-  const res = await fetch(`${TODOIST_API}${pathname}`, {
+async function todoistFetch(pathname, token, params = {}) {
+  const url = new URL(`${TODOIST_API}${pathname}`);
+  for (const [key, value] of Object.entries(params)) {
+    if (value !== undefined && value !== null) url.searchParams.set(key, value);
+  }
+
+  const res = await fetch(url, {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) {
@@ -76,6 +84,25 @@ async function todoistFetch(pathname, token) {
     throw new Error(`Todoist API ${res.status}: ${body || res.statusText}`);
   }
   return res.json();
+}
+
+// List endpoints on API v1 are cursor-paginated: { results: [...], next_cursor }.
+// Loops until there's no next cursor, capped at MAX_PAGES as a safety net.
+async function todoistFetchAll(pathname, token) {
+  const items = [];
+  let cursor;
+
+  for (let page = 0; page < MAX_PAGES; page++) {
+    const body = await todoistFetch(pathname, token, { cursor });
+    const pageItems = Array.isArray(body) ? body : body.results || [];
+    items.push(...pageItems);
+
+    const nextCursor = Array.isArray(body) ? null : body.next_cursor;
+    if (!nextCursor || nextCursor === cursor) break;
+    cursor = nextCursor;
+  }
+
+  return items;
 }
 
 ipcMain.handle('todoist:getOverview', async () => {
@@ -87,8 +114,8 @@ ipcMain.handle('todoist:getOverview', async () => {
   }
 
   const [tasks, projects] = await Promise.all([
-    todoistFetch('/tasks', token),
-    todoistFetch('/projects', token)
+    todoistFetchAll('/tasks', token),
+    todoistFetchAll('/projects', token)
   ]);
 
   const projectsById = new Map(projects.map((p) => [p.id, p]));
