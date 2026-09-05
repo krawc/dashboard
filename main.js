@@ -77,6 +77,8 @@ ipcMain.handle('shell:openExternal', (_event, url) => {
 
 ipcMain.handle('todoist:getOverview', () => todoist.getOverview());
 
+ipcMain.handle('todoist:completeTask', (_event, taskId) => todoist.completeTask(taskId));
+
 // ---------------------------------------------------------------------------
 // Gmail
 // ---------------------------------------------------------------------------

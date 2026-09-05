@@ -289,20 +289,48 @@ main#app::-webkit-scrollbar-track {
   gap: 10px;
   padding: 7px 0;
   cursor: default;
+  transition: opacity 0.2s ease;
 }
 
-.digest-row-marker {
-  width: 6px;
-  height: 6px;
+.digest-row.is-completing {
+  opacity: 0.4;
+}
+
+.task-check {
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
   border-radius: 50%;
-  background: var(--text-tertiary);
+  border: 1.5px solid var(--text-tertiary);
+  background: transparent;
+  padding: 0;
   flex-shrink: 0;
-  margin-top: 7px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color 0.12s ease, background 0.12s ease;
 }
 
-.digest-row.is-p1 .digest-row-marker,
-.digest-row.is-p2 .digest-row-marker {
+.task-check:hover {
+  border-color: var(--text-primary);
+}
+
+.task-check svg {
+  width: 9px;
+  height: 9px;
+  color: #fff;
+  opacity: 0;
+  transition: opacity 0.12s ease;
+}
+
+.task-check.is-done {
   background: var(--text-primary);
+  border-color: var(--text-primary);
+}
+
+.task-check.is-done svg {
+  opacity: 1;
 }
 
 .digest-row-content {
@@ -311,6 +339,7 @@ main#app::-webkit-scrollbar-track {
   font-size: 13.5px;
   color: var(--text-primary);
   line-height: 1.4;
+  padding-top: 1px;
 }
 
 .digest-row.is-p1 .digest-row-content {

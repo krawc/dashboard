@@ -13,6 +13,7 @@ contextBridge.exposeInMainWorld('dashboard', {
 
   // Todoist
   getOverview: () => ipcRenderer.invoke('todoist:getOverview'),
+  completeTask: (taskId) => ipcRenderer.invoke('todoist:completeTask', taskId),
 
   // Gmail
   listGmailAccounts: () => ipcRenderer.invoke('gmail:listAccounts'),

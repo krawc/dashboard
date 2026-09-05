@@ -5,6 +5,7 @@ A minimalist, greyscale personal dashboard for macOS, built with Electron.
 Currently shows:
 - **Task summary** — a morning-digest style list of Todoist tasks grouped
   into Overdue / Today / Tomorrow / Upcoming, with priority and due time.
+  Click a task's checkbox to mark it done right from the dashboard.
 - **Projects** — a donut chart of open tasks per project, in a categorical
   color palette. Click a slice (or a legend row) to see that project's
   open tasks in a modal.

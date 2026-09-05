@@ -73,6 +73,7 @@ const OTHER_COLOR = '#898781';
 
 let chart = null;
 let latestOverview = null;
+let openProjectId = null;
 
 function escapeHtml(str) {
   const div = document.createElement('div');
@@ -97,13 +98,50 @@ function renderTaskRow(task, { showProject = true } = {}) {
   if (task.dueTime) meta.push(`<span class="digest-row-time">${escapeHtml(task.dueTime)}</span>`);
 
   return `
-    <li class="digest-row task-list-row ${priorityClass}">
-      <span class="digest-row-marker"></span>
+    <li class="digest-row task-list-row ${priorityClass}" data-task-id="${escapeHtml(task.id)}">
+      <button class="task-check" data-task-id="${escapeHtml(task.id)}" aria-label="Mark done">
+        <svg viewBox="0 0 16 16"><path fill="currentColor" d="M6.2 11.2 3 8l1.4-1.4 1.8 1.8L11.6 3 13 4.4z"/></svg>
+      </button>
       <span class="digest-row-content">${escapeHtml(task.content)}</span>
       ${meta.length ? `<span class="digest-row-meta">${meta.join('')}</span>` : ''}
     </li>
   `;
 }
+
+// Marks a task done: optimistic checkmark + fade, then asks Todoist, then
+// refreshes everything from the new source of truth (stats, chart, and the
+// project modal if it's the one open) so nothing drifts out of sync.
+async function completeTask(taskId, rowEl) {
+  const checkBtn = rowEl.querySelector('.task-check');
+  checkBtn.disabled = true;
+  checkBtn.classList.add('is-done');
+  rowEl.classList.add('is-completing');
+
+  try {
+    await window.dashboard.completeTask(taskId);
+    await loadOverview();
+
+    if (openProjectId) {
+      const project = latestOverview && latestOverview.projectBreakdown.find((p) => p.id === openProjectId);
+      if (project) openProjectModal(project);
+      else closeProjectModal();
+    }
+  } catch (err) {
+    checkBtn.disabled = false;
+    checkBtn.classList.remove('is-done');
+    rowEl.classList.remove('is-completing');
+    window.alert((err && err.message) || "Couldn't mark that task done."); // eslint-disable-line no-alert
+  }
+}
+
+function handleTaskCheckClick(e) {
+  const btn = e.target.closest('.task-check');
+  if (!btn || btn.disabled) return;
+  completeTask(btn.dataset.taskId, btn.closest('.digest-row'));
+}
+
+els.digestSections.addEventListener('click', handleTaskCheckClick);
+els.projectModalList.addEventListener('click', handleTaskCheckClick);
 
 function renderDigestSection(section) {
   if (section.tasks.length === 0) {
@@ -174,6 +212,7 @@ function colorsFor(displayed) {
 }
 
 function openProjectModal(project) {
+  openProjectId = project.id;
   els.projectModalTitle.textContent = project.name;
   const sorted = [...project.tasks].sort((a, b) => b.priority - a.priority);
   els.projectModalList.innerHTML = sorted.length
@@ -358,6 +397,7 @@ els.gmailList.addEventListener('click', (e) => {
 
 function closeProjectModal() {
   els.projectModalOverlay.hidden = true;
+  openProjectId = null;
 }
 
 els.projectModalClose.addEventListener('click', closeProjectModal);

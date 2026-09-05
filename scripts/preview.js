@@ -112,6 +112,22 @@ ipcMain.handle('settings:setOllamaConfig', () => true);
 ipcMain.handle('shell:openExternal', () => {});
 ipcMain.handle('todoist:getOverview', () => mockOverview);
 
+// Mutates the mock data so completing a task actually disappears on the
+// next getOverview() call, like the real Todoist-backed flow.
+ipcMain.handle('todoist:completeTask', (_event, taskId) => {
+  for (const section of mockOverview.sections) {
+    section.tasks = section.tasks.filter((t) => t.id !== taskId);
+  }
+  for (const project of mockOverview.projectBreakdown) {
+    const before = project.tasks.length;
+    project.tasks = project.tasks.filter((t) => t.id !== taskId);
+    project.count -= before - project.tasks.length;
+  }
+  mockOverview.projectBreakdown = mockOverview.projectBreakdown.filter((p) => p.count > 0);
+  mockOverview.totalTasks -= 1;
+  mockOverview.fetchedAt = new Date().toISOString();
+});
+
 ipcMain.handle('gmail:listAccounts', () => (gmailState === 'empty' ? [] : ['me@gmail.com', 'work@company.com']));
 ipcMain.handle('gmail:addAccount', () => 'me@gmail.com');
 ipcMain.handle('gmail:removeAccount', () => true);
