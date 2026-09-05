@@ -6,8 +6,17 @@ const gmail = require('./lib/gmail');
 const gmailDigest = require('./lib/gmailDigest');
 const ollama = require('./lib/ollama');
 const germanDrill = require('./lib/germanDrill');
+const logger = require('./lib/logger');
 
 let mainWindow;
+
+// Forward every pipeline log entry to the renderer as it happens, so the
+// log viewer updates live rather than only on request.
+logger.onEntry((entry) => {
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.send('log:entry', entry);
+  }
+});
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -116,3 +125,16 @@ ipcMain.handle('ollama:testConnection', (_event, host) =>
 ipcMain.handle('german:getState', () => germanDrill.getState());
 
 ipcMain.handle('german:completeRound', () => germanDrill.recordCompletion());
+
+// ---------------------------------------------------------------------------
+// Pipeline logs (Gmail fetch + Ollama request/response), for the in-app
+// log viewer — visible even when the app is launched as a packaged .app
+// with no terminal attached to see console output.
+// ---------------------------------------------------------------------------
+
+ipcMain.handle('logs:getRecent', () => logger.getRecent());
+
+ipcMain.handle('logs:clear', () => {
+  logger.clear();
+  return true;
+});

@@ -28,5 +28,14 @@ contextBridge.exposeInMainWorld('dashboard', {
 
   // German drill
   getGermanState: () => ipcRenderer.invoke('german:getState'),
-  completeGermanRound: () => ipcRenderer.invoke('german:completeRound')
+  completeGermanRound: () => ipcRenderer.invoke('german:completeRound'),
+
+  // Pipeline logs
+  getRecentLogs: () => ipcRenderer.invoke('logs:getRecent'),
+  clearLogs: () => ipcRenderer.invoke('logs:clear'),
+  onLogEntry: (callback) => {
+    const listener = (_event, entry) => callback(entry);
+    ipcRenderer.on('log:entry', listener);
+    return () => ipcRenderer.removeListener('log:entry', listener);
+  }
 });

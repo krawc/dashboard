@@ -44,6 +44,13 @@ const els = {
   gmailClear: document.getElementById('gmail-clear'),
   gmailConnectBtn: document.getElementById('gmail-connect-btn'),
   gmailRetryBtn: document.getElementById('gmail-retry-btn'),
+  gmailLogsBtn: document.getElementById('gmail-logs-btn'),
+
+  // Log viewer
+  logsOverlay: document.getElementById('logs-overlay'),
+  logsList: document.getElementById('logs-list'),
+  logsClose: document.getElementById('logs-close'),
+  logsClearBtn: document.getElementById('logs-clear-btn'),
 
   // Settings
   overlay: document.getElementById('settings-overlay'),
@@ -390,6 +397,78 @@ async function loadGmailDigest() {
 els.gmailList.addEventListener('click', (e) => {
   const item = e.target.closest('.action-item');
   if (item) window.dashboard.openExternal(item.dataset.link);
+});
+
+// ---------------------------------------------------------------------------
+// Pipeline log viewer — what actually got fetched from Gmail and sent
+// to/received from Ollama, live as it happens.
+// ---------------------------------------------------------------------------
+
+function formatLogTime(iso) {
+  return new Date(iso).toLocaleTimeString([], { hour12: false });
+}
+
+function renderLogEntry(entry) {
+  const hasData = entry.data !== null && entry.data !== undefined;
+  const li = document.createElement('li');
+  li.className = `log-entry${hasData ? ' has-data' : ''}`;
+  li.dataset.id = entry.id;
+  li.innerHTML = `
+    <div class="log-entry-line">
+      <span class="log-time">${formatLogTime(entry.time)}</span>
+      <span class="log-source">${escapeHtml(entry.source)}</span>
+      <span class="log-message">${escapeHtml(entry.message)}</span>
+    </div>
+    ${hasData ? `<pre class="log-data">${escapeHtml(JSON.stringify(entry.data, null, 2))}</pre>` : ''}
+  `;
+  return li;
+}
+
+function isScrolledNearBottom(el) {
+  return el.scrollHeight - el.scrollTop - el.clientHeight < 40;
+}
+
+function appendLogEntry(entry) {
+  const wasNearBottom = isScrolledNearBottom(els.logsList);
+  els.logsList.querySelector('.logs-empty')?.remove();
+  els.logsList.appendChild(renderLogEntry(entry));
+  if (wasNearBottom) els.logsList.scrollTop = els.logsList.scrollHeight;
+}
+
+els.logsList.addEventListener('click', (e) => {
+  const line = e.target.closest('.log-entry-line');
+  const entry = line && line.closest('.log-entry.has-data');
+  if (entry) entry.classList.toggle('is-expanded');
+});
+
+async function openLogs() {
+  const entries = await window.dashboard.getRecentLogs();
+  els.logsList.innerHTML = entries.length
+    ? ''
+    : '<li class="logs-empty">Nothing logged yet — trigger a Gmail sync to see it here.</li>';
+  for (const entry of entries) els.logsList.appendChild(renderLogEntry(entry));
+  els.logsList.scrollTop = els.logsList.scrollHeight;
+  els.logsOverlay.hidden = false;
+}
+
+function closeLogs() {
+  els.logsOverlay.hidden = true;
+}
+
+els.gmailLogsBtn.addEventListener('click', openLogs);
+els.logsClose.addEventListener('click', closeLogs);
+els.logsOverlay.addEventListener('click', (e) => {
+  if (e.target === els.logsOverlay) closeLogs();
+});
+els.logsClearBtn.addEventListener('click', async () => {
+  await window.dashboard.clearLogs();
+  els.logsList.innerHTML = '<li class="logs-empty">Nothing logged yet — trigger a Gmail sync to see it here.</li>';
+});
+
+// Log entries can arrive at any time (not just while the viewer is open) —
+// keep the list current so it's ready the moment it's opened.
+window.dashboard.onLogEntry((entry) => {
+  if (!els.logsOverlay.hidden) appendLogEntry(entry);
 });
 
 // ---------------------------------------------------------------------------

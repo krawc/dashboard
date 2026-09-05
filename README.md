@@ -174,6 +174,7 @@ lib/
   gmailDigest.js Orchestrates gmail.js + ollama.js into one digest
   ollama.js      Local LLM call that screens emails for actionability
   germanDrill.js Daily-streak tracking for the German drill
+  logger.js      In-memory log of the Gmail/Ollama pipeline, for the in-app log viewer
 src/
   index.html     App shell
   style.css      Neumorphic design system
@@ -206,6 +207,16 @@ assets/
 - The actionability prompt is intentionally strict (see `lib/ollama.js`
   for the exact criteria) — tune it there if it's too strict/loose for
   your inbox.
+- **Pipeline logs**: click **Logs** next to "Needs a reply" to see exactly
+  what happened on the last sync — every email Gmail returned, each batch
+  sent to Ollama, and Ollama's *raw* response before it gets parsed. This
+  is the place to look if the digest seems to be finding nothing it
+  shouldn't: click an entry to expand its details, and check the raw
+  response specifically — if it's non-empty but nothing got flagged, the
+  model's output didn't match the expected shape (a bug to report) rather
+  than a deliberate "nothing qualifies". Logs update live while a sync
+  runs and persist in memory for the session (cleared on quit, or with
+  the Clear button).
 - The German drill keeps its own in-page session state, so it's
   deliberately excluded from the refresh button and the 5-minute
   auto-refresh — neither will reset a round you're in the middle of.

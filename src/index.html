@@ -102,7 +102,10 @@
         <article class="card card-gmail">
           <div class="card-title-row">
             <h2 class="card-title">Needs a reply</h2>
-            <span id="gmail-scanned" class="card-title-hint"></span>
+            <div class="card-title-actions">
+              <span id="gmail-scanned" class="card-title-hint"></span>
+              <button id="gmail-logs-btn" class="text-btn" type="button">Logs</button>
+            </div>
           </div>
 
           <div id="gmail-empty" class="inline-state" hidden>
@@ -163,6 +166,23 @@
         </button>
       </div>
       <ul id="project-modal-list" class="task-list"></ul>
+    </div>
+  </div>
+
+  <!-- Pipeline log viewer: what was fetched from Gmail and sent to/received
+       from Ollama, live as it happens. -->
+  <div id="logs-overlay" class="overlay" hidden>
+    <div class="settings-panel panel modal-panel logs-panel">
+      <div class="modal-header">
+        <h2 class="card-title">Pipeline logs</h2>
+        <div class="modal-header-actions">
+          <button id="logs-clear-btn" class="text-btn" type="button">Clear</button>
+          <button id="logs-close" class="icon-btn" aria-label="Close">
+            <svg viewBox="0 0 24 24" width="14" height="14"><path fill="currentColor" d="M18.3 5.71 12 12l6.3 6.29-1.41 1.42L10.59 13.4l-6.3 6.3-1.41-1.41L9.17 12l-6.3-6.3 1.42-1.41L10.59 10.6l6.3-6.3z"/></svg>
+          </button>
+        </div>
+      </div>
+      <ul id="logs-list" class="logs-list"></ul>
     </div>
   </div>
 

@@ -150,6 +150,19 @@ const germanDoneToday = process.argv.includes('--german-done');
 ipcMain.handle('german:getState', () => ({ streak: 4, lastCompletedDate: '2026-09-04', doneToday: germanDoneToday }));
 ipcMain.handle('german:completeRound', () => ({ streak: 5, lastCompletedDate: '2026-09-05', doneToday: true }));
 
+const mockLogs = [
+  { id: 1, time: new Date(Date.now() - 60000).toISOString(), source: 'digest', message: 'Starting sync for 1 account(s): me@gmail.com', data: null },
+  { id: 2, time: new Date(Date.now() - 58000).toISOString(), source: 'gmail', message: 'Fetched: "Re: extension on the draft" from Prof. Alvarez <alvarez@nyu.edu>', data: { id: 'g1', account: 'me@gmail.com', from: 'Prof. Alvarez <alvarez@nyu.edu>', subject: 'Re: extension on the draft', date: 'Mon, 1 Jan 2026', bodyExcerpt: 'Hi, could you confirm the new date...' } },
+  { id: 3, time: new Date(Date.now() - 40000).toISOString(), source: 'gmail', message: 'me@gmail.com: 4 message(s) in the last 3d window (4 new, 0 cached)', data: null },
+  { id: 4, time: new Date(Date.now() - 39000).toISOString(), source: 'ollama', message: 'Screening 4 email(s) across 1 batch(es)', data: null },
+  { id: 5, time: new Date(Date.now() - 38000).toISOString(), source: 'ollama', message: 'Batch 1: sending 4 email(s) to qwen2.5:7b', data: { model: 'qwen2.5:7b', emails: [{ index: 0, from: 'Prof. Alvarez <alvarez@nyu.edu>', subject: 'Re: extension on the draft', date: 'Mon, 1 Jan 2026' }] } },
+  { id: 6, time: new Date(Date.now() - 5000).toISOString(), source: 'ollama', message: 'Batch 1: raw response', data: { raw: '[{"id":0,"reason":"Personal request needing a reply","deadline":"Thursday","priority":"high"}]' } },
+  { id: 7, time: new Date(Date.now() - 4000).toISOString(), source: 'ollama', message: 'Batch 1: 1 item(s) flagged', data: { flagged: [{ id: 0, reason: 'Personal request needing a reply', deadline: 'Thursday', priority: 'high' }] } },
+  { id: 8, time: new Date(Date.now() - 3000).toISOString(), source: 'digest', message: 'Done: 1 actionable item(s) out of 4 email(s) scanned', data: null }
+];
+ipcMain.handle('logs:getRecent', () => mockLogs);
+ipcMain.handle('logs:clear', () => true);
+
 app.whenReady().then(async () => {
   const win = new BrowserWindow({
     width: 1040,
