@@ -44,15 +44,31 @@ function showView(view) {
   els.grid.hidden = view !== 'data';
 }
 
-function greyPalette(n) {
-  // Cycles a set of distinct greyscale tones, dark to light, looping with
-  // slight variation if there are more projects than base tones.
-  const base = ['#2B2B2A', '#565654', '#7E7E7A', '#A6A6A1', '#C6C6C1', '#DCDCD7'];
-  const colors = [];
-  for (let i = 0; i < n; i++) {
-    colors.push(base[i % base.length]);
-  }
-  return colors;
+// Validated categorical palette (fixed hue order — never cycled/generated;
+// see dataviz skill references/palette.md). Everything else in the app stays
+// greyscale/neumorphic; this is the one place color carries meaning.
+const CATEGORICAL_PALETTE = [
+  '#2a78d6', // blue
+  '#eb6834', // orange
+  '#1baf7a', // aqua
+  '#eda100', // yellow
+  '#e87ba4', // magenta
+  '#008300', // green
+  '#4a3aa7', // violet
+  '#e34948'  // red
+];
+const OTHER_COLOR = '#898781'; // muted ink — recessive, reserved for "Other"
+
+// Caps at the palette's 8 fixed slots; anything beyond that folds into a
+// single "Other" bucket rather than generating a 9th hue.
+function foldToPalette(projectBreakdown) {
+  const max = CATEGORICAL_PALETTE.length;
+  if (projectBreakdown.length <= max) return projectBreakdown;
+
+  const kept = projectBreakdown.slice(0, max - 1);
+  const rest = projectBreakdown.slice(max - 1);
+  const otherCount = rest.reduce((sum, p) => sum + p.count, 0);
+  return [...kept, { id: '__other__', name: 'Other', count: otherCount }];
 }
 
 function formatSyncedAt(iso) {
@@ -80,12 +96,17 @@ function renderPriorityBars(byPriority, total) {
   }
 }
 
-function renderChart(projectBreakdown) {
-  const labels = projectBreakdown.map((p) => p.name);
-  const data = projectBreakdown.map((p) => p.count);
-  const colors = greyPalette(projectBreakdown.length);
+function colorsFor(displayed) {
+  let slot = 0;
+  return displayed.map((p) => (p.id === '__other__' ? OTHER_COLOR : CATEGORICAL_PALETTE[slot++]));
+}
 
-  els.chartCenterCount.textContent = projectBreakdown.length;
+function renderChart(displayed, totalProjectCount) {
+  const labels = displayed.map((p) => p.name);
+  const data = displayed.map((p) => p.count);
+  const colors = colorsFor(displayed);
+
+  els.chartCenterCount.textContent = totalProjectCount;
 
   if (chart) {
     chart.data.labels = labels;
@@ -126,11 +147,11 @@ function renderChart(projectBreakdown) {
   });
 }
 
-function renderLegend(projectBreakdown) {
-  const colors = greyPalette(projectBreakdown.length);
+function renderLegend(displayed) {
+  const colors = colorsFor(displayed);
   els.legend.innerHTML = '';
 
-  projectBreakdown.forEach((p, i) => {
+  displayed.forEach((p, i) => {
     const li = document.createElement('li');
     li.className = 'legend-item';
     li.innerHTML = `
@@ -156,8 +177,9 @@ function renderOverview(overview) {
   els.statUpcoming.textContent = overview.upcoming;
 
   renderPriorityBars(overview.byPriority, overview.totalTasks);
-  renderChart(overview.projectBreakdown);
-  renderLegend(overview.projectBreakdown);
+  const displayed = foldToPalette(overview.projectBreakdown);
+  renderChart(displayed, overview.projectBreakdown.length);
+  renderLegend(displayed);
 
   els.syncedAt.textContent = formatSyncedAt(overview.fetchedAt);
   showView('data');
