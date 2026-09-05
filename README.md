@@ -185,7 +185,14 @@ assets/
   each) for better deadline detection, which is slower than a
   snippet-only pass — expect the "Needs a reply" card to take a few
   seconds to tens of seconds depending on inbox volume and your Ollama
-  model's speed.
+  model's speed. Only the *first* sync of a mailbox is slow like this:
+  fetched messages are cached locally (they never change once sent), so
+  later refreshes only fetch genuinely new mail. Overlapping refreshes
+  (e.g. clicking refresh while the 5-minute auto-refresh is mid-flight)
+  also collapse into a single fetch rather than multiplying — both exist
+  specifically to stay well under Gmail API's per-minute quota. Promotions,
+  social, and forums categories are excluded from the search up front,
+  since they're not actionable anyway.
 - The actionability prompt is intentionally strict (see `lib/ollama.js`
   for the exact criteria) — tune it there if it's too strict/loose for
   your inbox.
