@@ -42,21 +42,39 @@ published/verified one), you create your own OAuth client:
 
 1. Go to [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
    and create a project if you don't have one.
-2. **OAuth consent screen**: set it to **External**, add yourself as a
+2. Under **APIs & Services → Library**, enable the **Gmail API**. Do this
+   *before* the steps below — the consent screen's scope picker only
+   offers scopes for APIs you've already enabled.
+3. **OAuth consent screen**: set it to **External**, add yourself as a
    test user. It's fine to leave it in "Testing" status — you don't need
    to submit for verification for personal use.
-3. Under **APIs & Services → Library**, enable the **Gmail API**.
-4. Under **Credentials → Create Credentials → OAuth client ID**, choose
+4. On the consent screen's **Data access** (or **Scopes**) section, click
+   **Add or remove scopes**, search for "Gmail API", and check
+   `.../auth/gmail.readonly`. Save. **This step is easy to miss and is
+   the #1 cause of a `Gmail profile 403` error** — without it, sign-in
+   still appears to succeed (you get the "Connected!" page) but the
+   resulting token has no actual Gmail permission, so every Gmail API
+   call 403s afterward.
+5. Under **Credentials → Create Credentials → OAuth client ID**, choose
    application type **Desktop app**. Create it.
-5. Copy the generated **Client ID** and **Client secret** into
+6. Copy the generated **Client ID** and **Client secret** into
    Dashboard's Settings → Google (Gmail).
-6. Click **+ Add Gmail account** in Settings. Your browser opens Google's
+7. Click **+ Add Gmail account** in Settings. Your browser opens Google's
    consent screen; sign in and approve. Since the app is unverified,
    Google shows an "unverified app" warning — click **Advanced → Go to
    Dashboard (unsafe)** to proceed (this is expected and normal for a
-   personal-use OAuth client you created yourself).
-7. Repeat step 6 for each additional mailbox — every account you connect
+   personal-use OAuth client you created yourself). The consent screen
+   should explicitly list "Read your email messages and settings" (or
+   similar) among the permissions — if it doesn't, the scope wasn't
+   added in step 4.
+8. Repeat step 7 for each additional mailbox — every account you connect
    this way gets included in the digest.
+
+If you already went through this once and hit `Gmail profile 403`: add
+the scope (step 4), then in Google Account settings →
+[Security → Third-party access](https://myaccount.google.com/connections)
+remove the existing connection for this app, and reconnect from Settings
+so it re-consents with the corrected scope.
 
 Tokens are stored locally via `electron-store`; only ever sent to
 Google's OAuth/Gmail endpoints.
